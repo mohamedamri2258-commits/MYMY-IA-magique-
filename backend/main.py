@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import uuid
@@ -21,6 +22,15 @@ except Exception:
 import requests
 
 app = FastAPI(title="Magique IA - Backend (FastAPI) - Unified Cloud/Local")
+
+# Add CORS middleware so the frontend served from another origin can call the API during testing
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # for local testing; restrict in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configuration via environment
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
@@ -92,7 +102,7 @@ def get_local_embedding_model():
     if _local_embedding_model is None:
         try:
             from sentence_transformers import SentenceTransformer
-n            _local_embedding_model = SentenceTransformer(os.getenv('LOCAL_EMBED_MODEL', 'all-MiniLM-L6-v2'))
+            _local_embedding_model = SentenceTransformer(os.getenv('LOCAL_EMBED_MODEL', 'all-MiniLM-L6-v2'))
         except Exception as e:
             print('Failed to load local embedding model:', e)
             _local_embedding_model = None
