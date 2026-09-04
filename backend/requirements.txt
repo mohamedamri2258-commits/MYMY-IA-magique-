@@ -6,3 +6,5 @@ qdrant-client
 openai
 requests
 pydantic
+sentence-transformers
+torch
