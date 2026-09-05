@@ -1,0 +1,6 @@
+Ceci est un fichier de test pour Magique IA.
+Il permet de vérifier l'indexation, la recherche et la génération via le backend.
+
+Exemple de contenu:
+- Objectif: tester le flux upload → embeddings → qdrant → requête → LLM
+- Contenu: Ceci est un texte de test.
