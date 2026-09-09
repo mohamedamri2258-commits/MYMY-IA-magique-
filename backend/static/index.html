@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYMY-IA magique - المنصة الشاملة</title>
+    <style>
+        :root {
+            --bg-color: #07090e;
+            --card-bg: #111827;
+            --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #9333ea 50%, #db2777 100%);
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #1f2937;
+            --code-bg: #030712;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        h1 {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #c084fc;
+            font-size: 1.1rem;
+        }
+        textarea, select, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--code-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        select {
+            cursor: pointer;
+        }
+        .file-upload-box {
+            border: 2px dashed #4f46e5;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            background-color: rgba(79, 70, 229, 0.05);
+            margin-bottom: 15px;
+        }
+        button {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .output-box {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            color: #34d399;
+            direction: ltr;
+            text-align: left;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            min-height: 120px;
+        }
+        .meta-info {
+            color: #f472b6;
+            direction: rtl;
+            text-align: right;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MYMY-IA magique</h1>
+            <p class="subtitle">النظام الشامل لمعالجة الملفات، الأخطاء، ودعم جميع لغات البرمجة</p>
+        </header>
+
+        <div class="card">
+            <h3>إرفاق ملف أو كتابة الأوامر والبرمجيات</h3>
+            
+            <label for="languageSelect">اختر لغة البرمجة أو النظام:</label>
+            <select id="languageSelect">
+                <option value="auto">تحديد تلقائي (Auto Detect)</option>
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript / Node.js</option>
+                <option value="cpp">C++ / C</option>
+                <option value="java">Java</option>
+                <option value="html_css">HTML / CSS / Web</option>
+                <option value="sql">SQL / Databases</option>
+                <option value="php">PHP</option>
+            </select>
+
+            <div class="file-upload-box">
+                <label style="display:block; margin-bottom: 5px; color: #a5b4fc; cursor: pointer;">إرفاق ملف (برنامج، نص، أو كود):</label>
+                <input type="file" id="fileInput">
+            </div>
+
+            <textarea id="userPrompt" rows="3" placeholder="أو اكتب وصف المشكلة، التعديل المطلوب، أو الكود مباشرة هنا..."></textarea>
+            
+            <button onclick="uploadAndProcess()">معالجة الملف وإصلاح الأخطاء بالذكاء الاصطناعي</button>
+        </div>
+
+        <div class="card">
+            <h3>نتائج المعالجة والتحليل الفوري</h3>
+            <div id="metaInfo" class="meta-info">الحالة: جاهز لاستقبال ملفاتك وأوامرك...</div>
+            <pre id="aiOutput" class="output-box">قم برفع ملفك أو كتابة استفسارك بالأعلى لتظهر النتائج هنا...</pre>
+        </div>
+    </div>
+
+    <script>
+        async function uploadAndProcess() {
+            const promptText = document.getElementById('userPrompt').value;
+            const language = document.getElementById('languageSelect').value;
+            const fileInput = document.getElementById('fileInput').files[0];
+
+            if (!promptText && !fileInput) {
+                alert('الرجاء إدخال أمر أو إرفاق ملف واحد على الأقل!');
+                return;
+            }
+
+            document.getElementById('metaInfo').innerText = "الحالة: جاري رفع الملف ومعالجة الأخطاء برمجياً...";
+            document.getElementById('aiOutput').innerText = "جاري تحليل الملف وفحص جميع المستويات البرمجية عبر MYMY-IA...";
+
+            const formData = new FormData();
+            formData.append('prompt', promptText);
+            formData.append('language', language);
+            if (fileInput) {
+                formData.append('file', fileInput);
+            }
+
+            try {
+                const response = await fetch('/api/ai/process-file', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                document.getElementById('metaInfo').innerText = "النظام المستخدم: " + data.engine_mode;
+                document.getElementById('aiOutput').innerText = data.result;
+            } catch (error) {
+                document.getElementById('metaInfo').innerText = "الحالة: خطأ في الاتصال";
+                document.getElementById('aiOutput').innerText = "حدث خطأ أثناء الاتصال بالخادم: " + error;
+            }
+        }
+    </script>
+</body>
+</html>
