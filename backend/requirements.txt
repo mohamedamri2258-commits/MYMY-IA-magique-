@@ -8,3 +8,9 @@ requests
 pydantic
 sentence-transformers
 torch
+fastapi
+uvicorn
+pydantic
+qdrant-client
+google-generativeai
+requests
