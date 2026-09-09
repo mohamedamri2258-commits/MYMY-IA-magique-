@@ -3,7 +3,8 @@ from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 import uvicorn
 import sqlite3
-import osQdrantClient
+import os
+from qdrant_client import QdrantClient
 
 app = FastAPI(title="MYMY-IA magique - Ultimate Pro Engine", version="8.0.0")
 
