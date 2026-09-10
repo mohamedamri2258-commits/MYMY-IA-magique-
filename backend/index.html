@@ -1,0 +1,60 @@
+import os
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
+import google.generativeai as genai
+
+app = FastAPI(title="MYMY-IA-Magique Elite Engine", version="4.0")
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+
+class AdvancedRequest(BaseModel):
+    prompt: str
+    task_type: str
+
+@app.get("/", response_class=HTMLResponse)
+def read_root():
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return """
+    <html>
+        <head><title>MYMY-IA-Magique</title></head>
+        <body style="background:#0f172a; color:#fff; font-family:sans-serif; text-align:center; padding-top:50px;">
+            <h1>MYMY-IA-Magique Elite Engine Active</h1>
+            <p>يرجى إضافة ملف index.html في المجلد الرئيسي للمشروع.</p>
+        </body>
+    </html>
+    """
+
+@app.post("/api/v1/execute")
+def execute_advanced_task(req: AdvancedRequest):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=400, detail="Gemini API Key is not configured on the server.")
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        system_instructions = (
+            "You are MYMY-IA-Magique, an elite, autonomous AI software engineering agent "
+            "comparable to Manus and Claude. Deliver precise, production-grade solutions."
+        )
+        full_prompt = f"{system_instructions}\n\nTask Type: {req.task_type}\nUser Request: {req.prompt}"
+        response = model.generate_content(full_prompt)
+        return {"success": True, "task_type": req.task_type, "response": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/analyze-file")
+async def analyze_file(file: UploadFile = File(...)):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=400, detail="Gemini API Key is missing.")
+    try:
+        contents = await file.read()
+        file_text = contents.decode("utf-8", errors="ignore")
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(f"Analyze this file deeply:\n\n{file_text[:10000]}")
+        return {"success": True, "filename": file.filename, "analysis": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
