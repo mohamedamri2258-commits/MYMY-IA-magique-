@@ -3,16 +3,22 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 import google.generativeai as genai
+import anthropic
+import requests
 
-app = FastAPI(title="MYMY-IA-Magique Elite Engine", version="4.0")
+app = FastAPI(title="MYMY-IA-Magique Elite Engine", version="4.1")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
+GROK_API_KEY = os.getenv("GROK_API_KEY", "")
+
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
 class AdvancedRequest(BaseModel):
     prompt: str
     task_type: str
+    model: str = "gemini"  # القيمة الافتراضية للنموذج (gemini, claude, grok, ollama)
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
@@ -24,24 +30,76 @@ def read_root():
         <head><title>MYMY-IA-Magique</title></head>
         <body style="background:#0f172a; color:#fff; font-family:sans-serif; text-align:center; padding-top:50px;">
             <h1>MYMY-IA-Magique Elite Engine Active</h1>
-            <p>يرجى إضافة ملف index.html في المجلد الرئيسي للمشروع.</p>
+            <p>مرحباً بك في المجلد الرئيسي، يرجى اضافة index.html في قائمة المستودع.</p>
         </body>
     </html>
     """
 
 @app.post("/api/v1/execute")
 def execute_advanced_task(req: AdvancedRequest):
-    if not GEMINI_API_KEY:
-        raise HTTPException(status_code=400, detail="Gemini API Key is not configured on the server.")
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        system_instructions = (
-            "You are MYMY-IA-Magique, an elite, autonomous AI software engineering agent "
-            "comparable to Manus and Claude. Deliver precise, production-grade solutions."
-        )
-        full_prompt = f"{system_instructions}\n\nTask Type: {req.task_type}\nUser Request: {req.prompt}"
-        response = model.generate_content(full_prompt)
-        return {"success": True, "task_type": req.task_type, "response": response.text}
+        # 1. نموذج Gemini
+        if req.model == "gemini":
+            if not GEMINI_API_KEY:
+                raise HTTPException(status_code=400, detail="Gemini API Key is not configured on the server.")
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            system_instructions = (
+                "You are MYMY-IA-Magique, an elite, autonomous AI software engineering agent "
+                "comparable to Marcus and Claude. Deliver precise, production-grade solutions."
+            )
+            full_prompt = f"{system_instructions}\n\nTask Type: {req.task_type}\nUser Request: {req.prompt}"
+            response = model.generate_content(full_prompt)
+            return {"success": True, "task_type": req.task_type, "response": response.text, "model": "Gemini"}
+
+        # 2. نموذج Claude (Anthropic)
+        elif req.model == "claude":
+            if not CLAUDE_API_KEY:
+                raise HTTPException(status_code=400, detail="Claude API Key is not configured on the server.")
+            client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+            message = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=2048,
+                messages=[{"role": "user", "content": f"Task: {req.task_type}\nRequest: {req.prompt}"}]
+            )
+            return {"success": True, "task_type": req.task_type, "response": message.content[0].text, "model": "Claude"}
+
+        # 3. نموذج Grok (xAI)
+        elif req.model == "grok":
+            if not GROK_API_KEY:
+                raise HTTPException(status_code=400, detail="Grok API Key is not configured on the server.")
+            headers = {
+                "Authorization": f"Bearer {GROK_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "grok-beta",
+                "messages": [{"role": "user", "content": f"Task: {req.task_type}\nRequest: {req.prompt}"}],
+                "stream": False
+            }
+            res = requests.post("https://api.x.ai/v1/chat/completions", json=payload, headers=headers)
+            if res.status_code != 200:
+                raise HTTPException(status_code=500, detail=f"Grok API Error: {res.text}")
+            answer = res.json()["choices"][0]["message"]["content"]
+            return {"success": True, "task_type": req.task_type, "response": answer, "model": "Grok"}
+
+        # 4. نموذج Ollama المحلي (بدون إنترنت)
+        elif req.model == "ollama":
+            ollama_url = os.getenv("OLLAMA_HOST", "http://localhost:11434/api/generate")
+            payload = {
+                "model": "llama3",
+                "prompt": f"Task: {req.task_type}\nRequest: {req.prompt}",
+                "stream": False
+            }
+            res = requests.post(ollama_url, json=payload)
+            if res.status_code != 200:
+                raise HTTPException(status_code=500, detail=f"Ollama Local Server Error: {res.text}")
+            
+            answer = res.json().get("response", "")
+            return {"success": True, "task_type": req.task_type, "response": answer, "model": "Ollama (Local)"}
+
+        else:
+            raise HTTPException(status_code=400, detail="Unknown model specified.")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -57,4 +115,4 @@ async def analyze_file(file: UploadFile = File(...)):
         return {"success": True, "filename": file.filename, "analysis": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+        
