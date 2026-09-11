@@ -1,118 +1,144 @@
-import os
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel
-import google.generativeai as genai
-import anthropic
-import requests
+<!DOCTYPE html>
+<html lang="fr" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYMY-IA-Magique Elite</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
 
-app = FastAPI(title="MYMY-IA-Magique Elite Engine", version="4.1")
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <h1 class="text-lg font-bold text-amber-400 flex items-center gap-1">
+                MYMY-IA-Magique ✨
+            </h1>
+            <div class="flex gap-2">
+                <!-- Language Selector -->
+                <select id="lang-select" class="bg-slate-800 text-xs border border-slate-700 rounded p-1 text-slate-200">
+                    <option value="ar">AR</option>
+                    <option value="fr">FR</option>
+                </select>
+                <!-- Model Selector -->
+                <select id="model-select" class="bg-slate-800 text-xs border border-slate-700 rounded p-1 text-slate-200 font-semibold">
+                    <option value="gemini">Gemini</option>
+                    <option value="claude">Claude</option>
+                    <option value="grok">Grok</option>
+                    <option value="ollama">Ollama (Local)</option>
+                </select>
+            </div>
+        </div>
+    </header>
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
-GROK_API_KEY = os.getenv("GROK_API_KEY", "")
-
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-
-class AdvancedRequest(BaseModel):
-    prompt: str
-    task_type: str
-    model: str = "gemini"  # القيمة الافتراضية للنموذج (gemini, claude, grok, ollama)
-
-@app.get("/", response_class=HTMLResponse)
-def read_root():
-    if os.path.exists("index.html"):
-        with open("index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    return """
-    <html>
-        <head><title>MYMY-IA-Magique</title></head>
-        <body style="background:#0f172a; color:#fff; font-family:sans-serif; text-align:center; padding-top:50px;">
-            <h1>MYMY-IA-Magique Elite Engine Active</h1>
-            <p>مرحباً بك في المجلد الرئيسي، يرجى اضافة index.html في قائمة المستودع.</p>
-        </body>
-    </html>
-    """
-
-@app.post("/api/v1/execute")
-def execute_advanced_task(req: AdvancedRequest):
-    try:
-        # 1. نموذج Gemini
-        if req.model == "gemini":
-            if not GEMINI_API_KEY:
-                raise HTTPException(status_code=400, detail="Gemini API Key is not configured on the server.")
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            system_instructions = (
-                "You are MYMY-IA-Magique, an elite, autonomous AI software engineering agent "
-                "comparable to Marcus and Claude. Deliver precise, production-grade solutions."
-            )
-            full_prompt = f"{system_instructions}\n\nTask Type: {req.task_type}\nUser Request: {req.prompt}"
-            response = model.generate_content(full_prompt)
-            return {"success": True, "task_type": req.task_type, "response": response.text, "model": "Gemini"}
-
-        # 2. نموذج Claude (Anthropic)
-        elif req.model == "claude":
-            if not CLAUDE_API_KEY:
-                raise HTTPException(status_code=400, detail="Claude API Key is not configured on the server.")
-            client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
-            message = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=2048,
-                messages=[{"role": "user", "content": f"Task: {req.task_type}\nRequest: {req.prompt}"}]
-            )
-            return {"success": True, "task_type": req.task_type, "response": message.content[0].text, "model": "Claude"}
-
-        # 3. نموذج Grok (xAI)
-        elif req.model == "grok":
-            if not GROK_API_KEY:
-                raise HTTPException(status_code=400, detail="Grok API Key is not configured on the server.")
-            headers = {
-                "Authorization": f"Bearer {GROK_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "grok-beta",
-                "messages": [{"role": "user", "content": f"Task: {req.task_type}\nRequest: {req.prompt}"}],
-                "stream": False
-            }
-            res = requests.post("https://api.x.ai/v1/chat/completions", json=payload, headers=headers)
-            if res.status_code != 200:
-                raise HTTPException(status_code=500, detail=f"Grok API Error: {res.text}")
-            answer = res.json()["choices"][0]["message"]["content"]
-            return {"success": True, "task_type": req.task_type, "response": answer, "model": "Grok"}
-
-        # 4. نموذج Ollama المحلي (بدون إنترنت)
-        elif req.model == "ollama":
-            ollama_url = os.getenv("OLLAMA_HOST", "http://localhost:11434/api/generate")
-            payload = {
-                "model": "llama3",
-                "prompt": f"Task: {req.task_type}\nRequest: {req.prompt}",
-                "stream": False
-            }
-            res = requests.post(ollama_url, json=payload)
-            if res.status_code != 200:
-                raise HTTPException(status_code=500, detail=f"Ollama Local Server Error: {res.text}")
-            
-            answer = res.json().get("response", "")
-            return {"success": True, "task_type": req.task_type, "response": answer, "model": "Ollama (Local)"}
-
-        else:
-            raise HTTPException(status_code=400, detail="Unknown model specified.")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/v1/analyze-file")
-async def analyze_file(file: UploadFile = File(...)):
-    if not GEMINI_API_KEY:
-        raise HTTPException(status_code=400, detail="Gemini API Key is missing.")
-    try:
-        contents = await file.read()
-        file_text = contents.decode("utf-8", errors="ignore")
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(f"Analyze this file deeply:\n\n{file_text[:10000]}")
-        return {"success": True, "filename": file.filename, "analysis": response.text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    <!-- Main Content Area -->
+    <main class="max-w-md mx-auto w-full p-4 flex-1 flex flex-col gap-4">
         
+        <div class="text-center">
+            <p class="text-xs text-slate-400">منصة متعددة النماذج والذكاء الاصطناعي الخارق</p>
+        </div>
+
+        <!-- Prompt & Input Box -->
+        <div class="flex flex-col gap-2">
+            <label for="user-prompt" class="text-sm font-medium text-slate-300">أدخل طلبك أو الكود هنا:</label>
+            <textarea id="user-prompt" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400" placeholder="اكتب طلبك البرمجي أو الصناعي هنا..."></textarea>
+        </div>
+
+        <!-- Action Buttons (Grid Layout for Mobile) -->
+        <div class="grid grid-cols-3 gap-2">
+            <button id="btn-execute" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 px-3 rounded-lg text-sm shadow transition flex items-center justify-center gap-1">
+                تنفيذ ⚡
+            </button>
+            <button id="btn-clear" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-3 rounded-lg text-sm border border-slate-700 transition flex items-center justify-center gap-1">
+                مسح 🧹
+            </button>
+            <label for="file-input" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-3 rounded-lg text-sm border border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer">
+                إرفاق 📎
+                <input type="file" id="file-input" class="hidden">
+            </label>
+        </div>
+
+        <!-- Download HTML Button -->
+        <div>
+            <button id="btn-download-html" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg text-sm shadow transition flex items-center justify-center gap-2">
+                💾 تحميل النتيجة كملف HTML / Web
+            </button>
+        </div>
+
+        <!-- Result Box -->
+        <div class="flex flex-col gap-1 flex-1">
+            <span class="text-xs font-semibold text-slate-400">النتيجة:</span>
+            <div id="result-output" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 min-h-[150px] max-h-[250px] overflow-y-auto whitespace-pre-wrap">
+                ...Le résultat s'affichera ici
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 p-3 text-center text-xs text-slate-500">
+        MYMY-IA-Magique &copy; 2026 - Mobile Edition
+    </footer>
+
+    <!-- JavaScript for Functionality -->
+    <script>
+        // زر التنفيذ وإرسال الطلب للسيرفر
+        document.getElementById('btn-execute').addEventListener('click', async () => {
+            const prompt = document.getElementById('user-prompt').value;
+            const model = document.getElementById('model-select').value;
+            const outputDiv = document.getElementById('result-output');
+
+            if (!prompt.trim()) {
+                alert('الرجاء إدخال طلب أو نص أولاً!');
+                return;
+            }
+
+            outputDiv.textContent = 'جاري المعالجة والتحليل... ⏳';
+
+            try {
+                const response = await fetch('/api/v1/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt, task_type: "general", model: model })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    outputDiv.textContent = data.response;
+                } else {
+                    outputDiv.textContent = 'خطأ: ' + (data.detail || 'حدث خطأ غير متوقع');
+                }
+            } catch (err) {
+                outputDiv.textContent = 'خطأ في الاتصال بالخادم: ' + err.message;
+            }
+        });
+
+        // زر المسح
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            document.getElementById('user-prompt').value = '';
+            document.getElementById('result-output').textContent = '...Le résultat s'affichera ici';
+        });
+
+        // زر تحميل النتيجة كملف HTML
+        document.getElementById('btn-download-html').addEventListener('click', () => {
+            const content = document.getElementById('result-output').textContent;
+            if (!content || content.includes('...Le résultat')) {
+                alert('لا توجد نتيجة لتنزيلها حالياً!');
+                return;
+            }
+
+            const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mymy-ia-result.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+    </html>
+    
