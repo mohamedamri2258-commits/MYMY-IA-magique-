@@ -4,127 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MYMY-IA-Magique Elite</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes magicGlow {
+            0%, 100% { border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 0 15px rgba(245, 158, 11, 0.1); }
+            50% { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 25px rgba(168, 85, 247, 0.2); }
+        }
+        .magic-card {
+            animation: magicGlow 4s infinite ease-in-out;
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+<body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-amber-500 selection:text-slate-950">
 
-    <!-- Header / Navbar -->
-    <header class="bg-slate-900 border-b border-slate-800 p-4 shadow-md sticky top-0 z-50">
+    <!-- Header / Navbar النخبة -->
+    <header class="bg-[#111827]/80 backdrop-blur-md border-b border-slate-800/80 p-3.5 shadow-lg sticky top-0 z-50">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <h1 class="text-lg font-bold text-amber-400 flex items-center gap-1">
-                MYMY-IA-Magique ✨
-            </h1>
-            <div class="flex gap-2">
-                <!-- Language Selector -->
-                <select id="lang-select" class="bg-slate-800 text-xs border border-slate-700 rounded p-1 text-slate-200">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-purple-600 flex items-center justify-center shadow-md text-slate-950 font-black text-sm">
+                    ✨
+                </div>
+                <h1 class="text-sm font-bold bg-gradient-to-r from-amber-400 to-purple-400 bg-clip-text text-transparent">
+                    MYMY-IA-Magique
+                </h1>
+            </div>
+            <div class="flex gap-1.5">
+                <select id="lang-select" class="bg-slate-900 text-xs border border-slate-700/60 rounded-lg p-1.5 text-slate-300 outline-none focus:border-amber-500">
                     <option value="ar">AR</option>
                     <option value="fr">FR</option>
                 </select>
-                <!-- Model Selector -->
-                <select id="model-select" class="bg-slate-800 text-xs border border-slate-700 rounded p-1 text-slate-200 font-semibold">
-                    <option value="gemini">Gemini</option>
-                    <option value="claude">Claude</option>
-                    <option value="grok">Grok</option>
-                    <option value="ollama">Ollama (Local)</option>
+                <select id="model-select" class="bg-slate-900 text-xs border border-slate-700/60 rounded-lg p-1.5 text-amber-300 font-semibold outline-none focus:border-amber-500">
+                    <option value="gemini">Gemini 1.5</option>
+                    <option value="claude">Claude Sonnet</option>
+                    <option value="grok">Grok (xAI)</option>
+                    <option value="ollama">Ollama (Local 📴)</option>
                 </select>
             </div>
         </div>
     </header>
 
     <!-- Main Content Area -->
-    <main class="max-w-md mx-auto w-full p-4 flex-1 flex flex-col gap-4">
+    <main class="max-w-md mx-auto w-full p-4 flex-1 flex flex-col gap-3.5">
         
-        <div class="text-center">
-            <p class="text-xs text-slate-400">منصة متعددة النماذج والذكاء الاصطناعي الخارق</p>
+        <!-- Welcome Banner السحري -->
+        <div class="magic-card bg-gradient-to-br from-slate-900/90 to-slate-950/90 border rounded-2xl p-3.5 text-center shadow-xl relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -left-10 w-24 h-24 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+            
+            <h2 class="text-xs font-semibold text-amber-400 mb-1">المنصة الهندسية الذكية والسيادية</h2>
+            <p class="text-[11px] text-slate-400">توليد الأكواد، إدارة المشاريع، والتشغيل المحلي بذكاء خارق.</p>
         </div>
 
-        <!-- Prompt & Input Box -->
-        <div class="flex flex-col gap-2">
-            <label for="user-prompt" class="text-sm font-medium text-slate-300">أدخل طلبك أو الكود هنا:</label>
-            <textarea id="user-prompt" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400" placeholder="اكتب طلبك البرمجي أو الصناعي هنا..."></textarea>
+        <!-- Project Context / Modification Box (لتعديل مشاريع سابقة) -->
+        <div class="flex flex-col gap-1.5">
+            <label for="project-context" class="text-xs font-medium text-amber-400/90 flex items-center gap-1">
+                📂 سياق المشروع أو الكود السابق (للتعديل عليه):
+            </label>
+            <textarea id="project-context" rows="2" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 outline-none focus:border-amber-500 transition shadow-inner placeholder:text-slate-600" placeholder="الصق الكود أو المرجع القديم هنا إذا أردت تعديله أو إضافة ميزة جديدة..."></textarea>
         </div>
 
-        <!-- Action Buttons (Grid Layout for Mobile) -->
+        <!-- Prompt Box -->
+        <div class="flex flex-col gap-1.5">
+            <label for="user-prompt" class="text-xs font-medium text-slate-200 flex items-center gap-1">
+                ⚡ طلبك البرمجي أو الصناعي الجديد:
+            </label>
+            <textarea id="user-prompt" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 outline-none focus:border-amber-500 transition shadow-inner placeholder:text-slate-600" placeholder="اكتب طلبك أو صف المشكلة هنا..."></textarea>
+        </div>
+
+        <!-- Action Buttons Grid -->
         <div class="grid grid-cols-3 gap-2">
-            <button id="btn-execute" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 px-3 rounded-lg text-sm shadow transition flex items-center justify-center gap-1">
+            <button id="btn-execute" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold py-2.5 px-2 rounded-xl text-xs shadow-lg shadow-amber-500/10 transition active:scale-95 flex items-center justify-center gap-1">
                 تنفيذ ⚡
             </button>
-            <button id="btn-clear" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-3 rounded-lg text-sm border border-slate-700 transition flex items-center justify-center gap-1">
+            <button id="btn-clear" class="bg-slate-900 hover:bg-slate-800 text-slate-300 font-medium py-2.5 px-2 rounded-xl text-xs border border-slate-800 transition active:scale-95 flex items-center justify-center gap-1">
                 مسح 🧹
             </button>
-            <label for="file-input" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-3 rounded-lg text-sm border border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer">
-                إرفاق 📎
-                <input type="file" id="file-input" class="hidden">
-            </label>
-        </div>
-
-        <!-- Download HTML Button -->
-        <div>
-            <button id="btn-download-html" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg text-sm shadow transition flex items-center justify-center gap-2">
-                💾 تحميل النتيجة كملف HTML / Web
+            <button id="btn-download-html" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-2.5 px-2 rounded-xl text-xs shadow-lg shadow-emerald-600/10 transition active:scale-95 flex items-center justify-center gap-1">
+                💾 تحميل HTML
             </button>
         </div>
 
-        <!-- Result Box -->
-        <div class="flex flex-col gap-1 flex-1">
-            <span class="text-xs font-semibold text-slate-400">النتيجة:</span>
-            <div id="result-output" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 min-h-[150px] max-h-[250px] overflow-y-auto whitespace-pre-wrap">
-                ...Le résultat s'affichera ici
+        <!-- Result Box منطقة النتيجة -->
+        <div class="flex flex-col gap-1.5 flex-1">
+            <span class="text-xs font-semibold text-slate-400 flex items-center justify-between">
+                <span>النتيجة والمخرجات:</span>
+                <span class="text-[10px] text-purple-400 font-mono">Autonomous Engine v4.5</span>
+            </span>
+            <div id="result-output" class="w-full bg-slate-900/90 border border-slate-800/80 rounded-xl p-3 text-xs text-slate-200 min-h-[160px] max-h-[240px] overflow-y-auto whitespace-pre-wrap font-mono shadow-inner">
+                ✨ ...Le résultat s'affichera ici en mode magique
             </div>
         </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800 p-3 text-center text-xs text-slate-500">
-        MYMY-IA-Magique &copy; 2026 - Mobile Edition
+    <footer class="bg-[#111827]/80 backdrop-blur-md border-t border-slate-800/80 p-2.5 text-center text-[11px] text-slate-500">
+        MYMY-IA-Magique &copy; 2026 - Engineered for Mohamed Amri
     </footer>
 
-    <!-- JavaScript for Functionality -->
+    <!-- Script البرمجي -->
     <script>
-        // زر التنفيذ وإرسال الطلب للسيرفر
         document.getElementById('btn-execute').addEventListener('click', async () => {
             const prompt = document.getElementById('user-prompt').value;
+            const context = document.getElementById('project-context').value;
             const model = document.getElementById('model-select').value;
             const outputDiv = document.getElementById('result-output');
 
             if (!prompt.trim()) {
-                alert('الرجاء إدخال طلب أو نص أولاً!');
+                alert('الرجاء إدخال الطلب أو التعديل المطلوب أولاً!');
                 return;
             }
 
-            outputDiv.textContent = 'جاري المعالجة والتحليل... ⏳';
+            outputDiv.textContent = '✨ جاري المعالجة السحرية والتحليل عبر النموذج... ⏳';
 
             try {
                 const response = await fetch('/api/v1/execute', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt, task_type: "general", model: model })
+                    body: JSON.stringify({ prompt: prompt, project_context: context, model: model })
                 });
 
                 const data = await response.json();
                 if (response.ok) {
                     outputDiv.textContent = data.response;
                 } else {
-                    outputDiv.textContent = 'خطأ: ' + (data.detail || 'حدث خطأ غير متوقع');
+                    outputDiv.textContent = '❌ خطأ: ' + (data.detail || 'حدث خطأ غير متوقع');
                 }
             } catch (err) {
-                outputDiv.textContent = 'خطأ في الاتصال بالخادم: ' + err.message;
+                outputDiv.textContent = '❌ خطأ في الاتصال بالسيرفر: ' + err.message;
             }
         });
 
-        // زر المسح
         document.getElementById('btn-clear').addEventListener('click', () => {
             document.getElementById('user-prompt').value = '';
-            document.getElementById('result-output').textContent = '...Le résultat s'affichera ici';
+            document.getElementById('project-context').value = '';
+            document.getElementById('result-output').textContent = '✨ ...Le résultat s\'affichera ici en mode magique';
         });
 
-        // زر تحميل النتيجة كملف HTML
         document.getElementById('btn-download-html').addEventListener('click', () => {
             const content = document.getElementById('result-output').textContent;
-            if (!content || content.includes('...Le résultat')) {
-                alert('لا توجد نتيجة لتنزيلها حالياً!');
+            if (!content || content.includes('...Le résultat') || content.includes('جاري المعالجة')) {
+                alert('لا توجد نتيجة صالحة للتنزيل حالياً!');
                 return;
             }
 
@@ -132,7 +152,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'mymy-ia-result.html';
+            a.download = 'mymy-ia-magique-project.html';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -140,5 +160,5 @@
         });
     </script>
 </body>
-    </html>
-    
+</html>
+
