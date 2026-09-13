@@ -2,47 +2,28 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'https://votre-projet.onrender.com/api';
+  static const String baseUrl = "https://mymy-ia-magique.onrender.com";
 
-  static Future<String> askMYMY_IA(String userPrompt, {String mode = 'cloud'}) async {
+  static Future<String> sendMessage(String prompt) async {
+    final url = Uri.parse('$baseUrl/api/query');
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/query?mode=$mode'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authentification par e-mail': 'mohamed@entreprise.com',
-        },
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
-          "requête": userPrompt,
-          "top_k": 3
+          'query': prompt,
+          'top_k': 3
         }),
-      );
+      ).timeout(const Duration(seconds: 90));
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['réponse'] ?? data['response'] ?? 'Pas de réponse';
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        return data['response'] ?? data['answer'] ?? data.toString();
       } else {
-        return 'Erreur système : ${response.statusCode}';
+        return 'Erreur serveur (${response.statusCode})';
       }
     } catch (e) {
-      return 'Erreur de connexion au serveur IA.';
-    }
-  }
-
-  static Future<bool> checkMaintenanceAccess() async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/maintenance'),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Model': 'Infinix',
-        },
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
+      return 'Erreur de connexion au serveur IA';
     }
   }
 }
-
