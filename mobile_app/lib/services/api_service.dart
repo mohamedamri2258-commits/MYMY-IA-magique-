@@ -1,0 +1,49 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class ApiService {
+  // استبدل هذا الرابط برابط مشروعك الحقيقي على Render
+  static const String baseUrl = 'https://votre-projet.onrender.com/api';
+
+  static Future<String> askMYMY_IA(String userPrompt, {String mode = 'cloud'}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/query?mode=$mode'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authentification par e-mail': 'mohamed@entreprise.com',
+        },
+        body: jsonEncode({
+          "requête": userPrompt,
+          "top_k": 3
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['réponse'] ?? data['response'] ?? 'Pas de réponse';
+      } else {
+        return 'Erreur système : ${response.statusCode}';
+      }
+    } catch (e) {
+      return 'Erreur de connexion au serveur IA.';
+    }
+  }
+
+  static Future<bool> checkMaintenanceAccess() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/maintenance'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Model': 'Infinix',
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
