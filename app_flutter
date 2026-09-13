@@ -1,0 +1,56 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class ApiService {
+  // استبدل هذا الرابط برابط مشروعك الحقيقي على Render
+  static const String baseUrl = 'https://votre-projet.onrender.com/api';
+  
+  // دالة المحادثة مع الذكاء الاصطناعي
+  static Future<String> askMYMY_IA(String userPrompt, {String mode = 'cloud'}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/query?mode=$mode'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          // يمكن إضافة البريد الإلكتروني هنا للمصادقة الرقمية عند الحاجة
+          'Email-Auth': 'mohamed@entreprise.com', 
+        },
+        body: jsonEncode({
+          'query': userPrompt,
+          'top_k': 3
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['response'];
+      } else {
+        return 'Erreur système: ${response.statusCode}';
+      }
+    } catch (e) {
+      return 'Erreur de connexion au serveur IA.';
+    }
+  }
+
+  // دالة فحص صلاحيات الصيانة وإدارة النظام
+  static Future<bool> checkMaintenanceAccess() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/maintenance'),
+        headers: {
+          'Content-Type': 'application/json',
+          // إرسال نوع الجهاز لتأمين حقوق الصيانة
+          'X-Device-Model': 'Infinix', 
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return true; // تم منح الصلاحية
+      } else {
+        return false; // وصول مرفوض
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+}
