@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  # 🖥️ Ollama - نماذج AI محلية بدون إنترنت
+  ollama:
+    image: ollama/ollama:latest
+    container_name: mymy-ia-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    command: serve
+    networks:
+      - mymy-network
+
+  # 🧠 Qdrant - قاعدة ا��بيانات الموجهة بالمتجهات
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: mymy-ia-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      QDRANT_API_KEY: "your-secret-key"
+    networks:
+      - mymy-network
+
+  # 📊 PostgreSQL - قاعدة البيانات الرئيسية
+  postgres:
+    image: postgres:15-alpine
+    container_name: mymy-ia-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: mymy_ia
+      POSTGRES_USER: mymy_user
+      POSTGRES_PASSWORD: secure_password_123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mymy-network
+
+  # 🔴 Redis - الذاكرة السريعة والـ Queue
+  redis:
+    image: redis:7-alpine
+    container_name: mymy-ia-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - mymy-network
+
+  # 🌟 Backend FastAPI - محرك MYMY-IA الرئيسي
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mymy-ia-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MODE=hybrid
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - QDRANT_URL=http://qdrant:6333
+      - DATABASE_URL=postgresql://mymy_user:secure_password_123@postgres:5432/mymy_ia
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - LOCAL_LLM_MODEL=qwen2.5-coder
+      - EMBED_VECTOR_SIZE=384
+    volumes:
+      - ./backend:/app/backend
+      - ./backend/core:/app/backend/core
+    depends_on:
+      - ollama
+      - qdrant
+      - postgres
+      - redis
+    networks:
+      - mymy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 📱 Flutter Web - واجهة الويب
+  frontend-web:
+    build:
+      context: ./application_mobile
+      dockerfile: Dockerfile.web
+    container_name: mymy-ia-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - mymy-network
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+      - REACT_APP_WS_URL=ws://backend:8000
+
+  # 🌐 Nginx - Reverse Proxy والـ Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: mymy-ia-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend-web
+    networks:
+      - mymy-network
+
+  # 📝 PgAdmin - إدارة قاعدة البيانات
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mymy-ia-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mymy-ia.local
+      PGADMIN_DEFAULT_PASSWORD: admin_password
+    depends_on:
+      - postgres
+    networks:
+      - mymy-network
+
+volumes:
+  ollama_data:
+  qdrant_storage:
+  postgres_data:
+  redis_data:
+
+networks:
+  mymy-network:
+    driver: bridge
