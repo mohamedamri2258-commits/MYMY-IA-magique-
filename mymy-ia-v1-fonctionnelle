@@ -1,13 +1,13 @@
-📁 .github
-📁 application_mobile
-📁 backend
-📁 frontend
-📁 nginx
-📄 .env.example
-📄 .gitignore
-📄 docker-compose.yml
-📄 index.html
-📄 README.md
-📄 README_GITHUB_V1.md
-📄 requirements.txt
-📄 start.sh
+.github
+application_mobile
+backend
+frontend
+nginx
+.env.example
+.gitignore
+docker-compose.yml
+index.html
+README.md
+README_GITHUB_V1.md
+requirements.txt
+start.sh
